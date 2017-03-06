@@ -1,154 +1,167 @@
 function solve() {
-	
-	const Validators = {
-		stringMustBeBetween(inputString, min, max){
+	// Your classes
+  
+  function stringMustBeBetween(inputString, min, max){
       if(inputString.length < min || inputString.length > max){
-        throw Error(`String must be between ${min} and ${max} characters long.`);
+        throw Error('name not valid');
       }
-      else{
-        return inputString;
-      }
-    },
-		isString(input){
+  }
+  function isString(input){
       if(typeof input !== 'string'){
         throw Error('Input must be a string.');
       }
-    },
-    numberMustBePositive(input){
+  }
+  function numberMustBePositive(input){
       if(input <= 0){
-        throw Error(`Number must be positive.`);
+        throw Error('Number must be positive.');
       }
-    },
-		numberMustBeBetween(inputString, min, max){
-      if(inputString < min || inputString > max){
-        throw Error(`Number must be between ${min} and ${max}.`);
+  }
+  function numberMustBeBetween(input, min, max){
+      if(input < min || input > max){
+        throw Error('Number must be different.');
       }
-    },
-    inputIsUndefined(input){
+  }
+  function inputIsUndefined(input){
       if(input === undefined){
         throw Error('No arguments passed to the function');
       }
-    },
-	  isNumber(input){
-      if(typeof input !== 'number'){
+  }
+	function isNumber(input){
+      if(typeof input !== 'number' || Number.isNaN(input)){
         throw Error('Input must be a number.');
       }
-    },
-		invalidVersion(newVersion, oldVersion){
+  }
+  function invalidVersion(newVersion, oldVersion){
 			if(newVersion <= oldVersion){
 				throw Error('Invalid version');
 			}
-		},
-    isAppInstance(input){
+  }
+  function isAppInstance(input){
       if(!(input instanceof App)){
         throw Error('Input is not instance of App.')
       }
-    },
-		stringContainsOnlyLatinLetters(value){
+  }
+  function stringContainsOnlyLatinLetters(value){
 			if(!(/^[a-zA-Z\d ]+$/.test(value))){
 				throw Error('String should contain only latin letters, digits and blank spaces.');
 			}
-		}
-	}
-	
-	var timeOfUpload = 0;
+  }
+  
+  var timeOfUpload = 0;
 	
 	function timeGenerator(){
     timeOfUpload += 1;
     return timeOfUpload;
   }
 	
-	class App{
+	function copyApp(app){
+		return {
+			name: app.name,
+			description: app.description,
+			version: app.version,
+			rating: app.rating,
+			apps: app.apps
+		};
+	}
+  
+ 	class App{
 		constructor(name, description, version, rating){
-			this.name = name;
-			this.description = description;
-			this.version = version;
-			this.rating = rating;
-			this.timeOfUpload = undefined;
+			this._name = name;
+			this._description = description;
+			this._version = version;
+			this._rating = rating;
+      //this.timeOfUpload = undefined;
 		}
 		get name(){
 			return this._name;
 		}
 		set name(value){
-			Validators.stringMustBeBetween(value, 1, 24);
-			Validators.stringContainsOnlyLatinLetters(value);
+			stringMustBeBetween(value, 1, 24);
+			stringContainsOnlyLatinLetters(value);
 			this._name = value;
 		}
 		get description(){
 			return this._description;
 		}
 		set description(value){
-			Validators.isString(value);
+			isString(value);
 			this._description = value;
 		}
 		get version(){
 			return this._version;
 		}
 		set version(value){
-		  Validators.isNumber(value);
-			Validators.numberMustBePositive(value);
+		  isNumber(value);
+			numberMustBePositive(value);
 			this._version = value;
 		}
 		get rating(){
 			return this._rating;
 		}
 		set rating(value){
-		  Validators.isNumber(value);
-			Validators.numberMustBeBetween(value, 1, 10);
+		  isNumber(value);
+			numberMustBeBetween(value, 1, 10);
 			this._rating = value;
 		}
 		release(input){
-			if(typeof input === 'number'){
-				Validators.invalidVersion(input, this.version);
-				this.version = input;
+			if(typeof input !== 'object'){
+				input = {version: input};
+			} 
+			
+			var version = input.version;
+			
+			inputIsUndefined(version);
+			isNumber(version);
+			numberMustBePositive(version);
+		 
+			invalidVersion(version, this.version);
+			
+			this.version = version;
+			if(input.hasOwnProperty('description')){
+				var description = input.description;
+				isString(description);
+				this.description = description;
 			}
-			else{
-			  var version = input.version;
-			  
-			  Validators.inputIsUndefined(version);
-			  Validators.isNumber(version);
-			  Validators.numberMustBePositive(version);
-		   
-			  Validators.invalidVersion(version, this.version);
-			  
-			  this.version = version;
-			  
-			  var description = input.description;
-			  Validators.isString(description);
-			  this.description = description;
-			  
-			  var rating = input.rating;
-			  Validators.isNumber(rating);
-			  Validators.numberMustBeBetween(rating, 1, 10);
-			  this.rating = rating;
+			
+			if(input.hasOwnProperty('rating')){
+				var rating = input.rating;
+		    isNumber(rating);
+			  numberMustBeBetween(rating, 1, 10);
+				this.rating = rating;
 			}
+			return this;
 		}
 	}
-	
-	class Store extends App{
+  
+  class Store extends App{
 		constructor(name, description, version, rating){
 			super(name, description, version, rating);
-			this.apps = [];
+			this._apps = [];
 		}
+		
+		get apps(){
+			return this._apps;
+		}
+		
 		uploadApp(app){
-			Validators.isAppInstance(app);
-			var sameExistingApp = this.apps.find(a => a.name === app.name);
+			isAppInstance(app);////////////////////////////////////////////////////
+			var sameExistingApp = this._apps.find(a => a.name === app.name);
 			if(sameExistingApp === undefined){
-				this.apps.push(app);
+				this._apps.push(app);
 			}
 			else{
-        Validators.invalidVersion(app.version, sameExistingApp.version);				
+        invalidVersion(app.version, sameExistingApp.version);				
 				sameExistingApp.release(app);
 			}
 			app.timeOfUpload = timeGenerator();
 			return this;
 		}
 		takedownApp(name){
-			var matchingApp = this.apps.find(a => a.name === name);
+			var matchingApp = this._apps.find(a => a.name === name);
 			if(matchingApp === undefined){
 				throw Error('App not found');
 			}
-			this.apps.splice(this.apps.indexOf(matchingApp), 1);
+			this._apps.splice(this._apps.indexOf(matchingApp), 1);
 		  return this;
 		}
 		search(pattern){
@@ -156,7 +169,7 @@ function solve() {
 			
 			var matchingSubstr = pattern.toLowerCase();
 			
-			for(var app of this.apps){
+			for(var app of this._apps){
 				var appName = app.name.toLowerCase();
         
         if(appName.indexOf(matchingSubstr) !== -1){
@@ -172,7 +185,7 @@ function solve() {
 			}
 			var result = [];
 			
-      result = this.apps.sort(function(a, b){return a.timeOfUpload < b.timeOfUpload});
+      result = this._apps.sort(function(a, b){return a.timeOfUpload < b.timeOfUpload});
       			
       var countResult = [];
       
@@ -196,7 +209,7 @@ function solve() {
 			}
 			var result = [];
 			
-      result = this.apps.sort(function(a, b){
+      result = this._apps.sort(function(a, b){
 				if(a.rating !== b.rating){
 					return a.rating < b.rating
 				}
@@ -222,17 +235,18 @@ function solve() {
 			return countResult;
 		}
 	}
-	
-	class Device{
+  
+  class Device{
 		constructor(hostname, apps){
-			this.hostname = hostname;
-			this.apps = apps;
+			this._hostname = hostname;
+			this._apps = apps;
+			this._stores = apps.filter(app => app instanceof Store).map(store => copyApp(store));
 		}
 		get hostname(){
 			return this._hostname;
 		}
 		set hostname(value){
-			Validators.stringMustBeBetween(value, 1, 32);
+			stringMustBeBetween(value, 1, 32);
 			this._hostname = value;
 		}
 		get apps(){
@@ -244,18 +258,18 @@ function solve() {
 			}
 			
 			for(var app of value){
-				Validators.isAppInstance(app);
+				isAppInstance(app);
 			}
 			this._apps = value;
 		}
 		search(pattern){
-		  var result = [];
-			
+      var result = [];
+      
 			var matchingSubstr = pattern.toLowerCase();
 			
-		  for(var store of this.apps){
+		  for(var store of this._apps){
 				  if(store.apps !== undefined){
-						for(var app of store.apps){
+						for(var app of store._apps){
 							var appName = app.name.toLowerCase();
         
               if(appName.indexOf(matchingSubstr) !== -1){
@@ -285,9 +299,9 @@ function solve() {
 
 			var matchingApps = [];
 					
-		  for(var store of this.apps){
+		  for(var store of this._apps){
 				  if(store.apps !== undefined){
-						for(var app of store.apps){				
+						for(var app of store._apps){				
               if(app.name === name){
                 matchingApps.push(app);
 						}
@@ -304,7 +318,7 @@ function solve() {
 			  throw Error('no such app found in stores');	 
 			}
 			
-			var appAlreadyInstalled = this.apps.find(a => a.name === matchingApp.name);
+			var appAlreadyInstalled = this._apps.find(a => a.name === matchingApp.name);
 			if(appAlreadyInstalled === undefined 
 				 ||
 				 appAlreadyInstalled.version < matchingApp.version
@@ -316,30 +330,26 @@ function solve() {
 			
 		}
 		uninstall(name){
-			var appExists = this.apps.find(a => a.name === name);
+			var appExists = this._apps.find(a => a.name === name);
 			if(appExists === undefined){
 				throw Error('app not installed on device');
 			}
 			else{
-			 this.apps.splice(this.apps.indexOf(appExists), 1);
+			 this.apps.splice(this._apps.indexOf(appExists), 1);
 			}
 			return this;
 		}
 		listInstalled(){
-			return this.apps.sort(function(a, b){return a.name > b.name});
+			return this._apps.sort(function(a, b){return a.name > b.name});
 		}
 		update(){
-			for(var app of this.apps){
+			for(var app of this._apps){
 				//this.install(app.name);
 			}
 			return this;
 		}
 	}
-	
-	var App1 = new App("app 1", "app1descr", 1, 2);
-	
-	console.log(App1);
-	
+
 	return {
 		createApp(name, description, version, rating) {
 			return new App(name, description, version, rating);
@@ -354,5 +364,3 @@ function solve() {
 }
 
 solve();
-
-//module.exports = solve;
